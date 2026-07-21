@@ -25,8 +25,10 @@ production-grade Kotlin on Spring Boot.
 ./gradlew build
 ```
 
-There is currently no bundled local-dev profile that starts a throwaway Postgres
-container for manual `bootRun` — the local-dev runner is planned but not yet wired up.
+For manual local runs, use `TestBlogApiApplication` (`src/test/kotlin/.../TestBlogApiApplication.kt`)
+instead of the main class. It boots the app with `TestcontainersConfiguration` applied, which
+starts a throwaway `postgres:17-alpine` container, runs the Flyway migrations against it, and
+serves on port 8080 — no manual Postgres setup required.
 
 ## Current state
 
@@ -35,9 +37,10 @@ This project is early-stage. What exists today:
 - `User` and `BlogPost` domain entities (Spring Data JDBC)
 - Flyway migration creating the `users` and `blog_post` tables
 - Repository layer (`UserRepository`, `BlogPostRepository`)
+- Security/JWT configuration (stateless resource server, JWT encoder/decoder, filter chain)
 
-**Not yet implemented:** service layer, controllers, and the security/JWT configuration.
-There are no HTTP endpoints available yet.
+**Not yet implemented:** service layer and controllers (auth and blog post endpoints).
+There are no callable HTTP endpoints yet.
 
 ## Planned API surface
 
