@@ -26,7 +26,7 @@ class UserRepositoryTest(@Autowired val users: UserRepository) {
     @Test
     fun `findByEmail returns the user when one exists with that email`() {
         val saved = users.save(newUser())
-        val found = users.findByEmail("nvt@nvt.nl")
+        val found = users.findByEmail("coos@example.com")
 
         assertThat(found).isNotNull
         assertThat(found?.id).isEqualTo(saved.id)
