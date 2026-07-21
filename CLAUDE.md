@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+## Working style
+
+- The user writes application code. Claude reviews, explains, and flags issues — especially duplicated code, where Claude should propose the idiomatic refactor (shared helpers, dependency factories, parameterization) rather than just pointing out the duplication.
+- Claude may scaffold infrastructure/config more directly (build files, CI, docker, migrations skeletons, etc.).
+
 ## Build/test
 
 `./gradlew build` (requires Docker running — tests use Testcontainers).
