@@ -38,3 +38,7 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Local secrets/config (never commit) ###
+application-local.yml
+application-*-local.yml
