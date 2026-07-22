@@ -49,6 +49,11 @@ annotations need **no** `@field:` prefix — write `@NotBlank val title: String`
 - Write tests against the spec/intended behavior, never mirroring the implementation.
 - Use MockK, not Mockito.
 
+## Conventions
+
+- `token_type` (access vs refresh) is enforced in the auth service flow, not on the JWT
+  decoder — `SecurityConfig`'s `JwtDecoder` validates signature/expiry only.
+
 ## Git/workflow
 
 - Feature branch → PR → merge to protected `main`.
