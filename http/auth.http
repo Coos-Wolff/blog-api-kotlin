@@ -1,44 +1,144 @@
 ### Auth endpoints — manual verification
-### Run "Register" once, then "Login" (captures tokens), then "Refresh" (consumes refresh_token).
+### Uses the http-client.env.json "local" environment for {{host}} — select it when running these requests.
+### An optional, gitignored http-client.private.env.json next to this file can override/add secrets per developer.
+###
+### Run order for the happy path: "Register success" -> "Login success" (captures tokens) -> "Refresh success"
+### (consumes the captured refresh_token). The other requests each exercise one error status in isolation.
 
-@host = http://localhost:8080
+@email = manual-{{$uuid}}@example.com
+@password = correct-horse-battery-staple
 
-### Register
+### Register — success (201)
 POST {{host}}/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "manual-test@example.com",
+  "email": "{{email}}",
   "name": "Manual Tester",
-  "password": "correct-horse-battery-staple"
+  "password": "{{password}}"
 }
 
 > {%
-    client.test("Register returns 201", function() {
-        client.assert(response.status === 201, "Expected 201 Created, got " + response.status);
+    client.test("201 Created", function() {
+        client.assert(response.status === 201, "Expected 201, got " + response.status);
     });
 %}
 
-### Login
+### Register — duplicate email (409)
+# Re-registers the same {{email}} from the request above.
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "name": "Manual Tester",
+  "password": "{{password}}"
+}
+
+> {%
+    client.test("409 Conflict", function() {
+        client.assert(response.status === 409, "Expected 409, got " + response.status);
+    });
+%}
+
+### Register — validation error: password too short (400)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "manual-{{$uuid}}@example.com",
+  "name": "Manual Tester",
+  "password": "too-short"
+}
+
+> {%
+    client.test("400 Bad Request", function() {
+        client.assert(response.status === 400, "Expected 400, got " + response.status);
+    });
+%}
+
+### Register — validation error: blank name (400)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "manual-{{$uuid}}@example.com",
+  "name": "",
+  "password": "{{password}}"
+}
+
+> {%
+    client.test("400 Bad Request", function() {
+        client.assert(response.status === 400, "Expected 400, got " + response.status);
+    });
+%}
+
+### Register — validation error: malformed email (400)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "name": "Manual Tester",
+  "password": "{{password}}"
+}
+
+> {%
+    client.test("400 Bad Request", function() {
+        client.assert(response.status === 400, "Expected 400, got " + response.status);
+    });
+%}
+
+### Login — success (200)
 # Populates access_token and refresh_token for the requests below.
 POST {{host}}/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "manual-test@example.com",
-  "password": "correct-horse-battery-staple"
+  "email": "{{email}}",
+  "password": "{{password}}"
 }
 
 > {%
-    client.test("Login returns tokens", function() {
-        client.assert(response.status === 200, "Expected 200 OK, got " + response.status);
+    client.test("200 OK", function() {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
     });
     client.global.set("access_token", response.body.access_token);
     client.global.set("refresh_token", response.body.refresh_token);
 %}
 
-### Refresh
-# Uses the refresh_token captured by the Login request above — run Login first.
+### Login — wrong password (401)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "some-other-password"
+}
+
+> {%
+    client.test("401 Unauthorized", function() {
+        client.assert(response.status === 401, "Expected 401, got " + response.status);
+    });
+%}
+
+### Login — validation error: blank password (400)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": ""
+}
+
+> {%
+    client.test("400 Bad Request", function() {
+        client.assert(response.status === 400, "Expected 400, got " + response.status);
+    });
+%}
+
+### Refresh — success (200)
+# Uses the refresh_token captured by "Login success" above — run it first.
 POST {{host}}/api/auth/refresh
 Content-Type: application/json
 
@@ -47,9 +147,52 @@ Content-Type: application/json
 }
 
 > {%
-    client.test("Refresh returns new tokens", function() {
-        client.assert(response.status === 200, "Expected 200 OK, got " + response.status);
+    client.test("200 OK", function() {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
     });
     client.global.set("access_token", response.body.access_token);
     client.global.set("refresh_token", response.body.refresh_token);
+%}
+
+### Refresh — unauthorized: access token used instead of refresh token (401)
+# Uses the access_token captured by "Login success" above — run it first.
+POST {{host}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{access_token}}"
+}
+
+> {%
+    client.test("401 Unauthorized", function() {
+        client.assert(response.status === 401, "Expected 401, got " + response.status);
+    });
+%}
+
+### Refresh — unauthorized: garbage token (401)
+POST {{host}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "garbage.token.now"
+}
+
+> {%
+    client.test("401 Unauthorized", function() {
+        client.assert(response.status === 401, "Expected 401, got " + response.status);
+    });
+%}
+
+### Refresh — validation error: blank refresh_token (400)
+POST {{host}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": ""
+}
+
+> {%
+    client.test("400 Bad Request", function() {
+        client.assert(response.status === 400, "Expected 400, got " + response.status);
+    });
 %}
