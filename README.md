@@ -49,6 +49,7 @@ blog post endpoints yet.
   - `POST /register` — create a user account
   - `POST /login` — exchange credentials for an access/refresh token pair
   - `POST /refresh` — exchange a refresh token for a new token pair
-  - See `src/test/http/auth.http` for runnable request examples.
+  - See `http/auth.http` for runnable request examples (select the `local` environment
+    from `http/http-client.env.json` in IntelliJ's HTTP Client before running).
 - **BlogPost CRUD:** not yet implemented. Planned: public reads; authenticated writes;
   update/delete restricted to the post's author or an admin.
