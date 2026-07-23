@@ -45,7 +45,12 @@ annotations need **no** `@field:` prefix — write `@NotBlank val title: String`
 ## Testing
 
 - `*Test` — fast slice tests: `@DataJdbcTest` + `@Import(TestcontainersConfiguration::class)`.
-- `*IT` — integration tests, in a separate source set (deferred, not yet set up).
+- `*IT` — integration tests, alongside unit tests in `src/test` (not a separate source set).
+  Use `IntegrationTestBase`: `@SpringBootTest(webEnvironment = RANDOM_PORT)` +
+  `@AutoConfigureRestTestClient`, driving the app over HTTP with `RestTestClient`.
+- Because `RANDOM_PORT` integration tests run outside the test transaction, there's no
+  transactional rollback between tests — clean up mutated state explicitly, e.g.
+  `userRepository.deleteAll()` in a `@BeforeEach`.
 - Write tests against the spec/intended behavior, never mirroring the implementation.
 - Use MockK, not Mockito.
 
@@ -53,6 +58,8 @@ annotations need **no** `@field:` prefix — write `@NotBlank val title: String`
 
 - `token_type` (access vs refresh) is enforced in the auth service flow, not on the JWT
   decoder — `SecurityConfig`'s `JwtDecoder` validates signature/expiry only.
+- Response/request JSON uses snake_case (`spring.jackson.property-naming-strategy=SNAKE_CASE`);
+  Kotlin properties stay camelCase.
 
 ## Git/workflow
 

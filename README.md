@@ -38,17 +38,17 @@ This project is early-stage. What exists today:
 - Flyway migration creating the `users` and `blog_post` tables
 - Repository layer (`UserRepository`, `BlogPostRepository`)
 - Security/JWT configuration (stateless resource server, JWT encoder/decoder, filter chain)
+- Auth service and controller: register, login, refresh — see "API surface" below
 
-**Not yet implemented:** service layer and controllers (auth and blog post endpoints).
-There are no callable HTTP endpoints yet.
+**Not yet implemented:** blog post service layer and controller. There are no callable
+blog post endpoints yet.
 
-## Planned API surface
+## API surface
 
-Once built out, the API will expose:
-
-- **Auth:** register, login, refresh (JWT-based)
-- **BlogPost CRUD:** public reads; authenticated writes; update/delete restricted to the
-  post's author or an admin
-
-This section describes the target behavior, not what is currently
-callable — see "Current state" above.
+- **Auth** (`/api/auth`, JWT-based):
+  - `POST /register` — create a user account
+  - `POST /login` — exchange credentials for an access/refresh token pair
+  - `POST /refresh` — exchange a refresh token for a new token pair
+  - See `src/test/http/auth.http` for runnable request examples.
+- **BlogPost CRUD:** not yet implemented. Planned: public reads; authenticated writes;
+  update/delete restricted to the post's author or an admin.
