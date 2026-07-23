@@ -1,0 +1,55 @@
+### Auth endpoints — manual verification
+### Run "Register" once, then "Login" (captures tokens), then "Refresh" (consumes refresh_token).
+
+@host = http://localhost:8080
+
+### Register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "manual-test@example.com",
+  "name": "Manual Tester",
+  "password": "correct-horse-battery-staple"
+}
+
+> {%
+    client.test("Register returns 201", function() {
+        client.assert(response.status === 201, "Expected 201 Created, got " + response.status);
+    });
+%}
+
+### Login
+# Populates access_token and refresh_token for the requests below.
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "manual-test@example.com",
+  "password": "correct-horse-battery-staple"
+}
+
+> {%
+    client.test("Login returns tokens", function() {
+        client.assert(response.status === 200, "Expected 200 OK, got " + response.status);
+    });
+    client.global.set("access_token", response.body.access_token);
+    client.global.set("refresh_token", response.body.refresh_token);
+%}
+
+### Refresh
+# Uses the refresh_token captured by the Login request above — run Login first.
+POST {{host}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refresh_token}}"
+}
+
+> {%
+    client.test("Refresh returns new tokens", function() {
+        client.assert(response.status === 200, "Expected 200 OK, got " + response.status);
+    });
+    client.global.set("access_token", response.body.access_token);
+    client.global.set("refresh_token", response.body.refresh_token);
+%}
