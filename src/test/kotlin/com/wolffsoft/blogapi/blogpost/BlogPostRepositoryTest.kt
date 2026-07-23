@@ -1,6 +1,5 @@
 package com.wolffsoft.blogapi.blogpost
 
-import com.wolffsoft.blogapi.BlogPostRepository
 import com.wolffsoft.blogapi.TestcontainersConfiguration
 import com.wolffsoft.blogapi.user.User
 import com.wolffsoft.blogapi.user.UserRepository

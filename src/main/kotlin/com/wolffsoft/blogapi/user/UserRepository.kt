@@ -1,9 +1,9 @@
 package com.wolffsoft.blogapi.user
 
-import org.springframework.data.repository.CrudRepository
 import java.util.UUID
+import org.springframework.data.repository.ListCrudRepository
 
-interface UserRepository : CrudRepository<User, UUID> {
+interface UserRepository : ListCrudRepository<User, UUID> {
     fun findByEmail(email: String): User?
     fun existsByEmail(email: String): Boolean
 }

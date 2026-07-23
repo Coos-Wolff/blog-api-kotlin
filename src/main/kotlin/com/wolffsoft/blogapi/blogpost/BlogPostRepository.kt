@@ -1,7 +1,6 @@
-package com.wolffsoft.blogapi
+package com.wolffsoft.blogapi.blogpost
 
-import com.wolffsoft.blogapi.blogpost.BlogPost
-import java.util.*
+import java.util.UUID
 import org.springframework.data.repository.ListCrudRepository
 import org.springframework.data.repository.PagingAndSortingRepository
 
