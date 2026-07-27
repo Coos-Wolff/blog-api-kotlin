@@ -15,7 +15,7 @@ import org.springframework.data.jdbc.core.mapping.AggregateReference
 
 @DataJdbcTest
 @Import(TestcontainersConfiguration::class)
-data class BlogPostRepositoryTest(@Autowired val posts: BlogPostRepository, @Autowired val users: UserRepository) {
+data class BlogPostRepositoryIT(@Autowired val posts: BlogPostRepository, @Autowired val users: UserRepository) {
 
     private fun persistedAuthorId(): UUID =
         users.save(
