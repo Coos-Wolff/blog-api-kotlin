@@ -45,3 +45,4 @@ application-*-local.yml
 application-local.properties
 application-*-local.properties
 http-client.private.env.json
+.env
