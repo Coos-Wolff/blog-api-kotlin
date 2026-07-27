@@ -2,6 +2,7 @@ package com.wolffsoft.blogapi.exception
 
 import com.wolffsoft.blogapi.auth.exception.EmailAlreadyExistsException
 import com.wolffsoft.blogapi.auth.exception.InvalidTokenException
+import com.wolffsoft.blogapi.blogpost.exception.BlogPostNotFoundException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
@@ -21,6 +22,8 @@ class GlobalExceptionHandler: ResponseEntityExceptionHandler() {
         const val CONFLICTING_VALUES_MESSAGE = "A conflicting value already exists"
         const val UNEXPECTED_ERROR_MESSAGE = "An unexpected error occurred"
         const val EMAIL_EXISTS_MESSAGE = "The email already exists"
+        const val FORBIDDEN_MESSAGE = "You do not have permission to perform this action"
+        const val BLOG_POST_NOT_FOUND_MESSAGE = "Blog post not found"
     }
 
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -42,6 +45,14 @@ class GlobalExceptionHandler: ResponseEntityExceptionHandler() {
         log.error("DataIntegrityViolationException: {}", ex.message)
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, CONFLICTING_VALUES_MESSAGE)
     }
+
+    @ExceptionHandler(ForbiddenException::class)
+    fun handleForbidden(ex: ForbiddenException): ProblemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, FORBIDDEN_MESSAGE)
+
+    @ExceptionHandler(BlogPostNotFoundException::class)
+    fun handleBlogPostNotFound(ex: BlogPostNotFoundException): ProblemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, BLOG_POST_NOT_FOUND_MESSAGE)
 
     @ExceptionHandler(Exception::class)
     fun handleException(ex: Exception): ProblemDetail {
