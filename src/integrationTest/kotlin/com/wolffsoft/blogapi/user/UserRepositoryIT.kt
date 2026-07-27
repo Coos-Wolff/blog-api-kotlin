@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Import
 
 @DataJdbcTest
 @Import(TestcontainersConfiguration::class)
-class UserRepositoryTest(@Autowired val users: UserRepository) {
+class UserRepositoryIT(@Autowired val users: UserRepository) {
 
     private fun newUser(
         email: String = "coos@example.com",
