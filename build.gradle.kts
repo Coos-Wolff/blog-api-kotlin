@@ -52,3 +52,34 @@ kotlin {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+testing {
+    suites {
+        val test by getting(JvmTestSuite::class) {
+            useJUnitJupiter()
+        }
+
+        register<JvmTestSuite>("integrationTest") {
+            useJUnitJupiter()
+
+            dependencies {
+                implementation(project())
+            }
+
+            targets {
+                all {
+                    testTask.configure {
+                        shouldRunAfter(test)
+                    }
+                }
+            }
+        }
+    }
+}
+
+configurations["integrationTestImplementation"].extendsFrom(configurations.testImplementation.get())
+configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.get())
+
+tasks.named("check") {
+    dependsOn(testing.suites.named("integrationTest"))
+}
