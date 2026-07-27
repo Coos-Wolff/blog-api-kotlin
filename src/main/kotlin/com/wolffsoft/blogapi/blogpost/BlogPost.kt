@@ -18,4 +18,5 @@ data class BlogPost(
     val imgUrl: String,
     val author: AggregateReference<User, UUID>,
     @Version val version: Long? = null
-)
+) {
+}

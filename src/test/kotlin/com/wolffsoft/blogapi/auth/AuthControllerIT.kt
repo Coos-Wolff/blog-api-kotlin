@@ -11,24 +11,13 @@ import com.wolffsoft.blogapi.auth.dto.LoginRequest
 import com.wolffsoft.blogapi.auth.dto.RefreshRequest
 import com.wolffsoft.blogapi.auth.dto.RegisterRequest
 import com.wolffsoft.blogapi.auth.dto.TokenResponse
-import com.wolffsoft.blogapi.user.UserRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.client.expectBody
 
 class AuthControllerIT: IntegrationTestBase() {
-
-    @Autowired
-    private lateinit var userRepository: UserRepository
-
-    @BeforeEach
-    fun cleanUp() {
-        userRepository.deleteAll()
-    }
 
     @Test
     fun`Should test register successful`() {

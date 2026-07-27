@@ -1,5 +1,8 @@
 package com.wolffsoft.blogapi
 
+import com.wolffsoft.blogapi.blogpost.BlogPostRepository
+import com.wolffsoft.blogapi.user.UserRepository
+import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient
 import org.springframework.boot.test.context.SpringBootTest
@@ -13,5 +16,17 @@ abstract class IntegrationTestBase {
 
     @Autowired
     protected lateinit var restTestClient: RestTestClient
+
+    @Autowired
+    protected lateinit var userRepository: UserRepository
+
+    @Autowired
+    protected lateinit var blogPostRepository: BlogPostRepository
+
+    @BeforeEach
+    fun cleanDatabase() {
+        blogPostRepository.deleteAll()
+        userRepository.deleteAll()
+    }
 
 }

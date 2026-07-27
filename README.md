@@ -32,16 +32,15 @@ serves on port 8080 — no manual Postgres setup required.
 
 ## Current state
 
-This project is early-stage. What exists today:
+The blog post feature is now complete. What exists today:
 
 - `User` and `BlogPost` domain entities (Spring Data JDBC)
 - Flyway migration creating the `users` and `blog_post` tables
 - Repository layer (`UserRepository`, `BlogPostRepository`)
 - Security/JWT configuration (stateless resource server, JWT encoder/decoder, filter chain)
 - Auth service and controller: register, login, refresh — see "API surface" below
-
-**Not yet implemented:** blog post service layer and controller. There are no callable
-blog post endpoints yet.
+- Blog post service and controller: public reads, authenticated writes, author-or-admin
+  ownership enforcement — see "API surface" below
 
 ## API surface
 
@@ -51,5 +50,12 @@ blog post endpoints yet.
   - `POST /refresh` — exchange a refresh token for a new token pair
   - See `http/auth.http` for runnable request examples (select the `local` environment
     from `http/http-client.env.json` in IntelliJ's HTTP Client before running).
-- **BlogPost CRUD:** not yet implemented. Planned: public reads; authenticated writes;
-  update/delete restricted to the post's author or an admin.
+- **Blog posts** (`/api/posts`):
+  - `GET /api/posts` — public, paginated list of posts (no authentication required)
+  - `GET /api/posts/{id}` — public, single post by id (no authentication required)
+  - `POST /api/posts` — authenticated; creates a post authored by the caller (author is
+    taken from the JWT, never from the request body)
+  - `PATCH /api/posts/{id}` — authenticated; partial update, restricted to the post's
+    author or an admin
+  - `DELETE /api/posts/{id}` — authenticated; restricted to the post's author or an admin
+  - See `http/blogpost.http` for a runnable end-to-end request example.

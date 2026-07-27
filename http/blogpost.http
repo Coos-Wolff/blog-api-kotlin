@@ -1,0 +1,106 @@
+### Blog post endpoints — manual verification
+### Uses the http-client.env.json "local" environment for {{host}} — select it when running these requests.
+### An optional, gitignored http-client.private.env.json next to this file can override/add secrets per developer.
+###
+### Run order: "Register" -> "Login" (captures access_token) -> "Create post" (captures post id) ->
+### "Get post by id" -> "Get all posts" -> "Patch post" -> "Delete post".
+### Reads (GET) require no auth. Writes (POST/PATCH/DELETE) require the bearer token captured at login.
+
+@email = manual-{{$uuid}}@example.com
+@password = correct-horse-battery-staple
+
+### Register — creates the author used for the flow below
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "name": "Manual Tester",
+  "password": "{{password}}"
+}
+
+> {%
+    client.test("201 Created", function () {
+        client.assert(response.status === 201, "Expected 201, got " + response.status);
+    });
+%}
+
+### Login — captures access_token for the authenticated requests below
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.test("200 OK", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    client.global.set("access_token", response.body.access_token);
+%}
+
+### --- Create -> Get -> Patch -> Delete flow ---
+
+### Create post (201) — author comes from the JWT, not the request body
+POST {{host}}/api/posts
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "title": "Manual Test Post",
+  "subtitle": "A subtitle",
+  "body": "Body content for the manual test post.",
+  "img_url": "https://example.com/image.png"
+}
+
+> {%
+    client.test("201 Created", function () {
+        client.assert(response.status === 201, "Expected 201, got " + response.status);
+    });
+    client.global.set("post_id", response.body.id);
+%}
+
+### Get post by id (200) — public read, no Authorization header
+GET {{host}}/api/posts/{{post_id}}
+
+> {%
+    client.test("200 OK", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+%}
+
+### Get all posts, paginated (200) — public read, no Authorization header
+GET {{host}}/api/posts?page=0&size=20
+
+> {%
+    client.test("200 OK", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+%}
+
+### Patch post — partial update, title only (200)
+PATCH {{host}}/api/posts/{{post_id}}
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "title": "Updated Title"
+}
+
+> {%
+    client.test("200 OK", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+%}
+
+### Delete post (204)
+DELETE {{host}}/api/posts/{{post_id}}
+Authorization: Bearer {{access_token}}
+
+> {%
+    client.test("204 No Content", function () {
+        client.assert(response.status === 204, "Expected 204, got " + response.status);
+    });
+%}
