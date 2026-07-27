@@ -49,8 +49,16 @@ annotations need **no** `@field:` prefix — write `@NotBlank val title: String`
   Use `IntegrationTestBase`: `@SpringBootTest(webEnvironment = RANDOM_PORT)` +
   `@AutoConfigureRestTestClient`, driving the app over HTTP with `RestTestClient`.
 - Because `RANDOM_PORT` integration tests run outside the test transaction, there's no
-  transactional rollback between tests — clean up mutated state explicitly, e.g.
-  `userRepository.deleteAll()` in a `@BeforeEach`.
+  transactional rollback between tests — clean up mutated state explicitly. `IntegrationTestBase`
+  autowires `userRepository`/`blogPostRepository` and does this once in a shared `@BeforeEach`,
+  FK-safe order (`blog_post` rows deleted before `users` rows, since `blog_post.author` references
+  `users`). Subclasses inherit this and must not re-declare their own repository fields or
+  cleanup — that reintroduces the duplication and risks an FK violation if a subclass's cleanup
+  forgets the ordering.
+- Admin-override integration tests (a promoted user acting on another user's resource) must call
+  `userRepository.save(user.copy(isAdmin = true))` **before** logging in, not after — roles are
+  snapshotted into the JWT at login time, so a token minted before the promotion would only carry
+  `ROLE_USER`.
 - Write tests against the spec/intended behavior, never mirroring the implementation.
 - Use MockK, not Mockito.
 
@@ -60,6 +68,10 @@ annotations need **no** `@field:` prefix — write `@NotBlank val title: String`
   decoder — `SecurityConfig`'s `JwtDecoder` validates signature/expiry only.
 - Response/request JSON uses snake_case (`spring.jackson.property-naming-strategy=SNAKE_CASE`);
   Kotlin properties stay camelCase.
+- List endpoints that return entities with an `AggregateReference` to another aggregate (e.g.
+  `BlogPost.author`) must batch-fetch: collect the distinct referenced ids and issue one
+  `findAllById`, then map in memory. Spring Data JDBC does not lazy-load `AggregateReference`,
+  so fetching one-by-one per row is an N+1 query bug, not just an inefficiency.
 
 ## Git/workflow
 
