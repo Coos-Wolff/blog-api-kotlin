@@ -9,6 +9,16 @@
 
 `./gradlew build` (requires Docker running — tests use Testcontainers).
 
+## Local configuration
+
+Local runs read a gitignored `.env` file via `DotenvEnvironmentPostProcessor` (backed by
+`io.github.cdimascio:dotenv-java`), which populates the `${...}` placeholders in
+`application.properties`. `.env.example` documents the required keys — copy it to `.env` and fill
+in real local values. Production supplies these same keys as real environment variables.
+
+`application-local.properties` was intentionally removed in favor of this mechanism — do not
+reintroduce a separate local profile.
+
 ## Persistence
 
 Spring Data JDBC, **not** JPA.
@@ -44,10 +54,16 @@ annotations need **no** `@field:` prefix — write `@NotBlank val title: String`
 
 ## Testing
 
-- `*Test` — fast slice tests: `@DataJdbcTest` + `@Import(TestcontainersConfiguration::class)`.
-- `*IT` — integration tests, alongside unit tests in `src/test` (not a separate source set).
-  Use `IntegrationTestBase`: `@SpringBootTest(webEnvironment = RANDOM_PORT)` +
-  `@AutoConfigureRestTestClient`, driving the app over HTTP with `RestTestClient`.
+- `src/test` — pure unit tests only (MockK, no Spring context, no Docker): the `*Test` files
+  (`TokenServiceTest`, `AuthServiceTest`, `BlogPostServiceTest`). Runs via `./gradlew test`.
+- `src/integrationTest` — a dedicated Gradle source set (JVM Test Suite plugin) for everything
+  container-backed: controller `*IT` tests (`AuthControllerIT`, `BlogPostControllerIT`), the
+  repository slice tests (`UserRepositoryIT`, `BlogPostRepositoryIT` — `@DataJdbcTest` +
+  `@Import(TestcontainersConfiguration::class)`), the full-context `BlogApiApplicationTests`, and
+  the shared infra (`IntegrationTestBase`, `IntegrationTestConstants`, `TestcontainersConfiguration`,
+  `TestBlogApiApplication`). Runs via `./gradlew integrationTest` (needs Docker); `check`/`build`
+  run both suites. Controller ITs use `IntegrationTestBase`: `@SpringBootTest(webEnvironment =
+  RANDOM_PORT)` + `@AutoConfigureRestTestClient`, driving the app over HTTP with `RestTestClient`.
 - Because `RANDOM_PORT` integration tests run outside the test transaction, there's no
   transactional rollback between tests — clean up mutated state explicitly. `IntegrationTestBase`
   autowires `userRepository`/`blogPostRepository` and does this once in a shared `@BeforeEach`,

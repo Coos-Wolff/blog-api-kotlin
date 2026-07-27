@@ -17,18 +17,41 @@ production-grade Kotlin on Spring Boot.
 ## Prerequisites
 
 - JDK 25
-- Docker running locally (required for Testcontainers-backed tests)
+- Docker running locally — required for `./gradlew integrationTest` and `./gradlew build`
+  (Testcontainers-backed tests). `./gradlew test` (fast unit tests) does not need Docker.
+  Running the app locally also needs a Postgres, via either option described below.
 
 ## Building and running
 
+### Tests
+
 ```bash
-./gradlew build
+./gradlew test            # fast unit tests only — no Docker required
+./gradlew integrationTest  # container-backed tests (Testcontainers) — requires Docker running
+./gradlew build            # runs both suites (check depends on integrationTest)
 ```
 
-For manual local runs, use `TestBlogApiApplication` (`src/test/kotlin/.../TestBlogApiApplication.kt`)
-instead of the main class. It boots the app with `TestcontainersConfiguration` applied, which
-starts a throwaway `postgres:17-alpine` container, runs the Flyway migrations against it, and
-serves on port 8080 — no manual Postgres setup required.
+### Running the app locally
+
+**Option A — throwaway container, no setup.** Run `TestBlogApiApplication`
+(`src/integrationTest/kotlin/com/wolffsoft/blogapi/TestBlogApiApplication.kt`) instead of the main
+class. It boots the app with `TestcontainersConfiguration` applied, which starts a throwaway
+`postgres:17-alpine` container, runs the Flyway migrations against it, and serves on port 8080.
+Requires Docker running; nothing else to configure.
+
+**Option B — persistent local Postgres via `.env`.** Copy `.env.example` to `.env` (gitignored)
+and fill in local values, start a matching Postgres, e.g.:
+
+```bash
+docker run -d --name blog-api-postgres \
+  -e POSTGRES_USER=blog_api -e POSTGRES_PASSWORD=blog_api -e POSTGRES_DB=blog_api \
+  -p 5432:5432 postgres:17-alpine
+```
+
+then run the main `BlogApiApplication`. A `DotenvEnvironmentPostProcessor` loads `.env` into the
+environment at startup, so the `${...}` placeholders in `application.properties` resolve.
+Production supplies these same keys as real environment variables — `.env` is a local-only
+convenience and is gitignored.
 
 ## Current state
 
